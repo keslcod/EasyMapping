@@ -121,6 +121,7 @@
             return [[genders allKeysForObject:value] lastObject];
         }];
         [mapping hasOneMapping:mapping forKey:@"relative"];
+        [mapping hasManyMapping:mapping forKey:@"children"];
     }];
 }
 
