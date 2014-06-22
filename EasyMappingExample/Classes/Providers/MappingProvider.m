@@ -76,8 +76,8 @@
         } withReverseBlock:^id(id value) {
            return [genders allKeysForObject:value].lastObject;
         }];
-        [mapping hasOneMapping:[self carMapping] forKey:@"car"];
-        [mapping hasManyMapping:[self phoneMapping] forKey:@"phones"];
+        [mapping hasOne:[Car class] forKeyPath:@"car"];
+        [mapping hasMany:[Phone class] forKeyPath:@"phones"];
     }];
 }
 
@@ -85,7 +85,7 @@
 {
     return [EKObjectMapping mappingForClass:[Person class] withBlock:^(EKObjectMapping *mapping) {
         [mapping mapFieldsFromArray:@[@"name", @"email"]];
-        [mapping hasOneMapping:[self carMapping] forKey:@"car"];
+        [mapping hasOne:[Car class] forKeyPath:@"car"];
     }];
 }
 
@@ -93,7 +93,7 @@
 {
     return [EKObjectMapping mappingForClass:[Person class] withBlock:^(EKObjectMapping *mapping) {
         [mapping mapFieldsFromArray:@[@"name", @"email"]];
-        [mapping hasManyMapping:[self phoneMapping] forKey:@"phones"];
+        [mapping hasMany:[Phone class] forKeyPath:@"phones"];
     }];
 }
 
@@ -120,8 +120,8 @@
         } withReverseBlock:^id(id value) {
             return [[genders allKeysForObject:value] lastObject];
         }];
-        [mapping hasOneMapping:mapping forKey:@"relative"];
-        [mapping hasManyMapping:mapping forKey:@"children"];
+        [mapping hasOne:[Person class] forKeyPath:@"relative"];
+        [mapping hasMany:[Person class] forKeyPath:@"children"];
     }];
 }
 
@@ -161,7 +161,7 @@
 {
     return [EKObjectMapping mappingForClass:[Plane class] withBlock:^(EKObjectMapping *mapping) {
         [mapping mapKey:@"flight_number" toField:@"flightNumber"];
-        [mapping hasManyMapping:[self personMapping] forKey:@"persons"];
+        [mapping hasMany:[Person class] forKeyPath:@"persons"];
     }];
 }
 
@@ -169,7 +169,7 @@
 {
     return [EKObjectMapping mappingForClass:[Alien class] withBlock:^(EKObjectMapping *mapping) {
         [mapping mapFieldsFromArray:@[@"name"]];
-        [mapping hasManyMapping:[self fingerMapping] forKey:@"fingers"];
+        [mapping hasMany:[Finger class] forKeyPath:@"fingers"];
     }];
 }
 
@@ -183,8 +183,8 @@
 + (EKObjectMapping *)ufoMapping {
     return [EKObjectMapping mappingForClass:[UFO class] withBlock:^(EKObjectMapping *mapping) {
         [mapping mapFieldsFromArray:@[@"shape"]];
-        [mapping hasOneMapping:[self alienMapping] forKey:@"captain"];
-        [mapping hasManyMapping:[self alienMapping] forKey:@"crew"];
+        [mapping hasOne:[Alien class] forKeyPath:@"captain"];
+        [mapping hasMany:[Alien class] forKeyPath:@"crew"];
         
     }];
 }
@@ -209,9 +209,9 @@
                                   withBlock:^(EKObjectMapping *mapping) {
                                       [mapping mapKey:@"name" toField:@"name"];
                                       [mapping mapKey:@"message" toField:@"message"];
-                                      [mapping hasManyMapping:mapping
-                                                       forKey:@"sub_comments"
-                                                     forField:@"subComments"];
+                                      [mapping hasMany:[CommentObject class]
+                                            forKeyPath:@"sub_comments"
+                                           forProperty:@"subComments"];
                                   }];
 }
 
