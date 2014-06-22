@@ -371,7 +371,7 @@ describe(@"EKMapper", ^{
             __block Native *native;
             
             beforeEach(^{
-                EKObjectMapping * mapping = [MappingProvider nativeMapping];
+                EKObjectMapping * mapping = [Native objectMapping];
                 NSDictionary * externalRepresentation = [CMFixture buildUsingFixture:@"Native"];
                 native = [EKMapper objectFromExternalRepresentation:externalRepresentation withMapping:mapping];
             });
@@ -549,9 +549,7 @@ describe(@"EKMapper", ^{
         
         beforeEach(^{
             NSDictionary *externalRepresentation = [CMFixture buildUsingFixture:@"Alien"];
-            [Alien registerMapping:[MappingProvider alienMapping]];
-            [Finger registerMapping:[MappingProvider fingerMapping]];
-            alien = [EKMapper objectFromExternalRepresentation:externalRepresentation withMapping:[MappingProvider alienMapping]];
+            alien = [EKMapper objectFromExternalRepresentation:externalRepresentation withMapping:[Alien objectMapping]];
         });
         
         specify(^{
@@ -570,9 +568,9 @@ describe(@"EKMapper", ^{
         
         beforeEach(^{
             NSDictionary *externalRepresentation = [CMFixture buildUsingFixture:@"CommentsRecursive"];
-            [CommentObject registerMapping:[MappingProvider commentObjectMapping]];
+            [CommentObject registerMapping:[CommentObject objectMapping]];
             comments = [EKMapper arrayOfObjectsFromExternalRepresentation:externalRepresentation[@"comments"]
-                                                             withMapping:[MappingProvider commentObjectMapping]];
+                                                             withMapping:[CommentObject objectMapping]];
         });
         
         it(@"should contain comments", ^{
