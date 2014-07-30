@@ -23,5 +23,5 @@
 
 #import <Foundation/Foundation.h>
 
-typedef id(^EKMappingValueBlock)(NSString *key, id value);
+typedef id(^EKMappingValueBlock)(NSString *key, id value, NSManagedObjectContext *);
 typedef id(^EKMappingReverseBlock)(id value);

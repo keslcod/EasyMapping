@@ -43,56 +43,63 @@ static const char scalarTypes[] = {
 + (BOOL)propertyNameIsScalar:(NSString *)propertyName fromObject:(id)object
 {
     objc_property_t property = class_getProperty(object_getClass(object), [propertyName UTF8String]);
-	NSString *type = property ? [self propertyTypeStringRepresentationFromProperty:property] : nil;
-    
-	return (type.length == 1) && (NSNotFound != [@(scalarTypes) rangeOfString:type].location);
+  NSString *type = property ? [self propertyTypeStringRepresentationFromProperty:property] : nil;
+
+  return (type.length == 1) && (NSNotFound != [@(scalarTypes) rangeOfString:type].location);
 }
 
 + (NSString *) propertyTypeStringRepresentationFromProperty:(objc_property_t)property
 {
     const char *TypeAttribute = "T";
-	char *type = property_copyAttributeValue(property, TypeAttribute);
-	NSString *propertyType = (type[0] != _C_ID) ? @(type) : ({
-		(type[1] == 0) ? @"id" : ({
-			// Modern format of a type attribute (e.g. @"NSSet")
-			type[strlen(type) - 1] = 0;
-			@(type + 2);
-		});
-	});
-	free(type);
-	return propertyType;
+  char *type = property_copyAttributeValue(property, TypeAttribute);
+  NSString *propertyType = (type[0] != _C_ID) ? @(type) : ({
+    (type[1] == 0) ? @"id" : ({
+      // Modern format of a type attribute (e.g. @"NSSet")
+      type[strlen(type) - 1] = 0;
+      @(type + 2);
+    });
+  });
+  free(type);
+  return propertyType;
 }
 
 + (id)propertyRepresentation:(NSArray *)array forObject:(id)object withPropertyName:(NSString *)propertyName
 {
     objc_property_t property = class_getProperty([object class], [propertyName UTF8String]);
-	if (property)
+  if (property)
     {
-		NSString *type = [self propertyTypeStringRepresentationFromProperty:property];
-		if ([type isEqualToString:@"NSSet"]) {
-			return [NSSet setWithArray:array];
-		}
-		else if ([type isEqualToString:@"NSMutableSet"]) {
+    NSString *type = [self propertyTypeStringRepresentationFromProperty:property];
+    if ([type isEqualToString:@"NSSet"]) {
+      return [NSSet setWithArray:array];
+    }
+    else if ([type isEqualToString:@"NSMutableSet"]) {
             return [NSMutableSet setWithArray:array];
-		}
-		else if ([type isEqualToString:@"NSOrderedSet"]) {
+    }
+    else if ([type isEqualToString:@"NSOrderedSet"]) {
             return [NSOrderedSet orderedSetWithArray:array];
-		}
-		else if ([type isEqualToString:@"NSMutableOrderedSet"]) {
+    }
+    else if ([type isEqualToString:@"NSMutableOrderedSet"]) {
             return [NSMutableOrderedSet orderedSetWithArray:array];
-		}
-		else if ([type isEqualToString:@"NSMutableArray"]) {
+    }
+    else if ([type isEqualToString:@"NSMutableArray"]) {
             return [NSMutableArray arrayWithArray:array];
-		}
-	}
+    }
+  }
     return array;
 }
 
-#pragma mark Property accessor methods 
+#pragma mark Property accessor methods
 
 + (void)setField:(EKFieldMapping *)fieldMapping onObject:(id)object fromRepresentation:(NSDictionary *)representation
 {
-    id value = [self getValueOfField:fieldMapping fromRepresentation:representation];
+    id value;
+    if ([object respondsToSelector:@selector(managedObjectContext)]) {
+        value = [self getValueOfField:fieldMapping fromRepresentation:representation inContext:[object managedObjectContext]];
+    }
+    else {
+        value = [self getValueOfField:fieldMapping fromRepresentation:representation];
+    }
+
     if (value == (id)[NSNull null]) {
         if (![self propertyNameIsScalar:fieldMapping.field fromObject:object]) {
             [self setValue:nil onObject:object forKeyPath:fieldMapping.field];
@@ -108,7 +115,7 @@ static const char scalarTypes[] = {
     {
         // Reducing update times in CoreData
         id _value = [object valueForKeyPath:keyPath];
-        
+
         if (_value != value && ![_value isEqual:value]) {
             [object setValue:value forKeyPath:keyPath];
         }
@@ -120,9 +127,14 @@ static const char scalarTypes[] = {
 
 + (id)getValueOfField:(EKFieldMapping *)fieldMapping fromRepresentation:(NSDictionary *)representation
 {
+    return [self getValueOfField:fieldMapping fromRepresentation:representation inContext:nil];
+}
+
++ (id)getValueOfField:(EKFieldMapping *)fieldMapping fromRepresentation:(NSDictionary *)representation inContext:(NSManagedObjectContext *)context
+{
     id value;
     if (fieldMapping.valueBlock) {
-        value = fieldMapping.valueBlock(fieldMapping.keyPath, [representation valueForKeyPath:fieldMapping.keyPath]);
+        value = fieldMapping.valueBlock(fieldMapping.keyPath, [representation valueForKeyPath:fieldMapping.keyPath], context);
     }
     else {
         value = [representation valueForKeyPath:fieldMapping.keyPath];

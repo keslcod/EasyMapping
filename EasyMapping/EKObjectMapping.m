@@ -80,7 +80,7 @@
 {
     [self mapKey:key
          toField:field
-  withValueBlock:^id(NSString * key, id value) {
+  withValueBlock:^id(NSString * key, id value, NSManagedObjectContext *context) {
         return [value isKindOfClass:[NSString class]] ? [EKTransformer transformString:value withDateFormat:dateFormat] : nil;;
     } withReverseBlock:^id(id value) {
         return [value isKindOfClass:[NSDate class]] ? [EKTransformer transformDate:value withDateFormat:dateFormat] : nil;
@@ -95,10 +95,10 @@
 }
 
 -(void)mapFieldsFromArrayToPascalCase:(NSArray *)fieldsArray {
-    
+
     for (NSString *key in fieldsArray) {
         NSString *pascalKey = [key stringByReplacingCharactersInRange:NSMakeRange(0,1) withString:[[key substringToIndex:1] uppercaseString]];
-        
+
         [self mapKey:pascalKey toField:key];
     }
 }
@@ -112,16 +112,16 @@
 
 
 -(void)mapFieldsFromMappingObject:(EKObjectMapping *)mappingObj {
-    
+
     for (NSString *key in mappingObj.fieldMappings) {
         [self addFieldMappingToDictionary:mappingObj.fieldMappings[key]];
     }
-    
+
     for (NSString *key in mappingObj.hasOneMappings) {
         EKObjectMapping *mapping = mappingObj.hasOneMappings[key];
         [self.hasOneMappings setObject:mapping forKey:mapping.keyPath];
     }
-    
+
     for (NSString *key in mappingObj.hasManyMappings) {
          EKObjectMapping *mapping = mappingObj.hasManyMappings[key];
         [self.hasManyMappings setObject:mapping forKey:mapping.keyPath];
@@ -129,7 +129,7 @@
 }
 
 - (void)mapKey:(NSString *)key toField:(NSString *)field
-withValueBlock:(id (^)(NSString *, id))valueBlock
+withValueBlock:(id (^)(NSString *, id, NSManagedObjectContext *))valueBlock
 {
     NSParameterAssert(valueBlock);
     EKFieldMapping *mapping = [[EKFieldMapping alloc] init];
@@ -140,11 +140,11 @@ withValueBlock:(id (^)(NSString *, id))valueBlock
 }
 
 - (void)mapKey:(NSString *)key toField:(NSString *)field
-withValueBlock:(id (^)(NSString *, id))valueBlock withReverseBlock:(id (^)(id))reverseBlock
+withValueBlock:(id (^)(NSString *, id, NSManagedObjectContext *))valueBlock withReverseBlock:(id (^)(id))reverseBlock
 {
     NSParameterAssert(valueBlock);
     NSParameterAssert(reverseBlock);
-    
+
     EKFieldMapping *mapping = [[EKFieldMapping alloc] init];
     mapping.field = field;
     mapping.keyPath = key;
@@ -157,7 +157,7 @@ withValueBlock:(id (^)(NSString *, id))valueBlock withReverseBlock:(id (^)(id))r
 {
     mapping.field = key;
     mapping.keyPath = key;
-    
+
     [self.hasOneMappings setObject:mapping forKey:mapping.keyPath];
 }
 
@@ -165,7 +165,7 @@ withValueBlock:(id (^)(NSString *, id))valueBlock withReverseBlock:(id (^)(id))r
 {
     mapping.field = field;
     mapping.keyPath = key;
-    
+
     [self.hasOneMappings setObject:mapping forKey:mapping.keyPath];
 }
 
@@ -173,7 +173,7 @@ withValueBlock:(id (^)(NSString *, id))valueBlock withReverseBlock:(id (^)(id))r
 {
     mapping.field = key;
     mapping.keyPath = key;
-    
+
     [self.hasManyMappings setObject:mapping forKey:mapping.keyPath];
 }
 
@@ -181,7 +181,7 @@ withValueBlock:(id (^)(NSString *, id))valueBlock withReverseBlock:(id (^)(id))r
 {
     mapping.field = field;
     mapping.keyPath = key;
-    
+
     [self.hasManyMappings setObject:mapping forKey:mapping.keyPath];
 }
 
