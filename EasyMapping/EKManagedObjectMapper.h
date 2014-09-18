@@ -77,6 +77,25 @@
                                           withMapping:(EKManagedObjectMapping *)mapping
                                inManagedObjectContext:(NSManagedObjectContext*)context;
 
+/**
+ Create array of CoreData objects. If passed JSON contains primary keys, previously existing object with these keys will be updated. Simply put, this method uses Find-Or-Create pattern. Can optionally resolve external duplicates.
+
+ @param externalRepresentation JSON array with objects
+
+ @param mapping object mapping
+
+ @param resolveExternalDuplicates YES to ignore duplicates in external representation. Defaults to NO.
+
+ @param context managed object context to perform objects creation
+
+ @result array of managed objects
+ */
++ (NSArray *)arrayOfObjectsFromExternalRepresentation:(NSArray *)externalRepresentation
+                                          withMapping:(EKManagedObjectMapping *)mapping
+                            resolveExternalDuplicates:(BOOL)resolveDuplicates
+                               inManagedObjectContext:(NSManagedObjectContext*)context;
+
+
 /** 
  Synchronize the objects in the managed object context with the objects from an external
  representation. Any new objects will be created, any existing objects will be updated

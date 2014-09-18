@@ -27,6 +27,7 @@
 
 @interface EKManagedObjectMapper ()
 @property (nonatomic, strong) EKCoreDataImporter * importer;
+@property (nonatomic, strong) NSMutableSet *processedPrimaryKeys;
 
 + (instancetype)mapperWithImporter:(EKCoreDataImporter *)importer;
 
@@ -59,6 +60,12 @@
 - (id)fillObject:(id)object fromExternalRepresentation:(NSDictionary *)externalRepresentation
      withMapping:(EKManagedObjectMapping *)mapping
 {
+    return [self fillObject:object fromExternalRepresentation:externalRepresentation withMapping:mapping resolveExternalDuplicates:NO];
+}
+
+- (id)fillObject:(id)object fromExternalRepresentation:(NSDictionary *)externalRepresentation
+     withMapping:(EKManagedObjectMapping *)mapping resolveExternalDuplicates:(BOOL)resolveExternalDuplicates
+{
     NSDictionary * representation = [EKPropertyHelper extractRootPathFromExternalRepresentation:externalRepresentation
                                                                                     withMapping:mapping];
     [mapping.fieldMappings enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL * stop)
@@ -81,7 +88,9 @@
         if (arrayToBeParsed && arrayToBeParsed != (id)[NSNull null])
         {
             NSArray * parsedArray = [self arrayOfObjectsFromExternalRepresentation:arrayToBeParsed
-                                                                       withMapping:obj];
+                                                                       withMapping:obj
+                                                         resolveExternalDuplicates:YES];
+            
             id parsedObjects = [EKPropertyHelper propertyRepresentation:parsedArray
                                                               forObject:object
                                                        withPropertyName:[obj field]];
@@ -95,12 +104,36 @@
 - (NSArray *)arrayOfObjectsFromExternalRepresentation:(NSArray *)externalRepresentation
                                           withMapping:(EKManagedObjectMapping *)mapping
 {
+    return [self arrayOfObjectsFromExternalRepresentation:externalRepresentation withMapping:mapping resolveExternalDuplicates:NO];
+}
+
+- (NSArray *)arrayOfObjectsFromExternalRepresentation:(NSArray *)externalRepresentation
+                                          withMapping:(EKManagedObjectMapping *)mapping
+                            resolveExternalDuplicates:(BOOL)resolveExternalDuplicats
+{
+    if (resolveExternalDuplicats)
+    {
+        if (!_processedPrimaryKeys)
+            _processedPrimaryKeys = [NSMutableSet set];
+    }
 
     NSMutableArray * array = [NSMutableArray array];
     for (NSDictionary * representation in externalRepresentation)
     {
+        id valueForPrimaryKey;
+        if (resolveExternalDuplicats)
+        {
+            valueForPrimaryKey = [EKPropertyHelper getValueOfField:[mapping primaryKeyFieldMapping]
+                                                   fromRepresentation:representation];
+            if ([self.processedPrimaryKeys containsObject:valueForPrimaryKey])
+            {
+                continue;
+            }
+        }
+
         id parsedObject = [self objectFromExternalRepresentation:representation withMapping:mapping];
         [array addObject:parsedObject];
+        [self.processedPrimaryKeys addObject:valueForPrimaryKey];
     }
     return [NSArray arrayWithArray:array];
 }
@@ -177,11 +210,24 @@ fromExternalRepresentation:(NSDictionary *)externalRepresentation
                                           withMapping:(EKManagedObjectMapping *)mapping
                                inManagedObjectContext:(NSManagedObjectContext *)context
 {
+    return [self arrayOfObjectsFromExternalRepresentation:externalRepresentation
+                                              withMapping:mapping
+                                resolveExternalDuplicates:NO
+                                   inManagedObjectContext:context];
+}
+
++ (NSArray *)arrayOfObjectsFromExternalRepresentation:(NSArray *)externalRepresentation
+                                          withMapping:(EKManagedObjectMapping *)mapping
+                            resolveExternalDuplicates:(BOOL)resolveDuplicates
+                               inManagedObjectContext:(NSManagedObjectContext*)context;
+{
     EKCoreDataImporter * importer = [EKCoreDataImporter importerWithMapping:mapping
                                                      externalRepresentation:externalRepresentation
                                                                     context:context];
+
     return [[self mapperWithImporter:importer] arrayOfObjectsFromExternalRepresentation:externalRepresentation
-                                                                            withMapping:mapping];
+                                                                            withMapping:mapping
+                                                   resolveExternalDuplicates:resolveDuplicates];
 }
 
 + (NSArray *)syncArrayOfObjectsFromExternalRepresentation:(NSArray *)externalRepresentation
