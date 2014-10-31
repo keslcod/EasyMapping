@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "EasyMapping"
-  s.version      = "0.6.3-keslcod"
+  s.version      = "0.6.4-keslcod"
   s.summary      = "The easiest way to map data from your webservice."
   s.homepage     = "https://github.com/keslcod/EasyMapping"
 
