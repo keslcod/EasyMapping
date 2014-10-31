@@ -41,6 +41,19 @@
 + (NSDictionary *)serializeObject:(id)object withMapping:(EKObjectMapping *)mapping;
 
 /**
+ Convert object to JSON representation and optionally includes null values for empty fields.
+
+ @param object object to convert.
+
+ @param mapping object mapping.
+ 
+ @param nullFlag YES to include empty fields.
+
+ @result parsed JSON in a form of NSDictionary.
+ */
++ (NSDictionary *)serializeObject:(id)object withMapping:(EKObjectMapping *)mapping includeNullValues:(BOOL)nullFlag;
+
+/**
  Convert objects to JSON representation.
  
  @param collection objects to convert.
@@ -50,5 +63,18 @@
  @result parsed JSON in a form of NSArray.
  */
 + (NSArray *)serializeCollection:(NSArray *)collection withMapping:(EKObjectMapping *)mapping;
+
+/**
+ Convert objects to JSON representation and optionally includes null values for empty fields.
+
+ @param collection objects to convert.
+
+ @param mapping object mapping.
+ 
+ @param nullFlag YES to include empty fields.
+
+ @result parsed JSON in a form of NSArray.
+ */
++ (NSArray *)serializeCollection:(NSArray *)collection withMapping:(EKObjectMapping *)mapping includeNullValues:(BOOL)nullFlag;
 
 @end

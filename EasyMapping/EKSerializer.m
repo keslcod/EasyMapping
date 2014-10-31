@@ -30,16 +30,21 @@
 
 + (NSDictionary *)serializeObject:(id)object withMapping:(EKObjectMapping *)mapping
 {
+	return [self serializeObject:object withMapping:mapping includeNullValues:NO];
+}
+
++ (NSDictionary *)serializeObject:(id)object withMapping:(EKObjectMapping *)mapping includeNullValues:(BOOL)nullFlag
+{
     NSMutableDictionary *representation = [NSMutableDictionary dictionary];
 
     [mapping.fieldMappings enumerateKeysAndObjectsUsingBlock:^(id key, EKFieldMapping *fieldMapping, BOOL *stop) {
-        [self setValueOnRepresentation:representation fromObject:object withFieldMapping:fieldMapping];
+        [self setValueOnRepresentation:representation fromObject:object withFieldMapping:fieldMapping includingNullValues:nullFlag];
     }];
     [mapping.hasOneMappings enumerateKeysAndObjectsUsingBlock:^(id key, EKObjectMapping *objectMapping, BOOL *stop) {
-        [self setHasOneMappingObjectOn:representation withObjectMapping:objectMapping fromObject:object];
+        [self setHasOneMappingObjectOn:representation withObjectMapping:objectMapping fromObject:object includingNullValues:nullFlag];
     }];
     [mapping.hasManyMappings enumerateKeysAndObjectsUsingBlock:^(id key, EKObjectMapping *objectMapping, BOOL *stop) {
-        [self setHasManyMappingObjectOn:representation withObjectMapping:objectMapping fromObject:object];
+        [self setHasManyMappingObjectOn:representation withObjectMapping:objectMapping fromObject:object includingNullValues:nullFlag];
     }];
     
     if (mapping.rootPath.length > 0) {
@@ -49,6 +54,11 @@
 }
 
 + (NSArray *)serializeCollection:(NSArray *)collection withMapping:(EKObjectMapping *)mapping
+{
+	return [self serializeCollection:collection withMapping:mapping includeNullValues:NO];
+}
+
++ (NSArray *)serializeCollection:(NSArray *)collection withMapping:(EKObjectMapping *)mapping includeNullValues:(BOOL)nullFlag
 {
     NSMutableArray *array = [NSMutableArray array];
     
@@ -60,7 +70,9 @@
     return [NSArray arrayWithArray:array];
 }
 
-+ (void)setValueOnRepresentation:(NSMutableDictionary *)representation fromObject:(id)object withFieldMapping:(EKFieldMapping *)fieldMapping
+#pragma mark - Private
+
++ (void)setValueOnRepresentation:(NSMutableDictionary *)representation fromObject:(id)object withFieldMapping:(EKFieldMapping *)fieldMapping includingNullValues:(BOOL)nullFlag
 {
     id returnedValue = [object valueForKey:fieldMapping.field];
     
@@ -69,8 +81,11 @@
         if (fieldMapping.reverseBlock) {
             returnedValue = fieldMapping.reverseBlock(returnedValue);
         }
-        [self setValue:returnedValue forKeyPath:fieldMapping.keyPath inRepresentation:representation];
-    }
+	} else {
+		returnedValue = [NSNull null];
+	}
+
+	[self setValue:returnedValue forKeyPath:fieldMapping.keyPath inRepresentation:representation];
 }
 
 + (void)setValue:(id)value forKeyPath:(NSString *)keyPath inRepresentation:(NSMutableDictionary *)representation {
@@ -98,23 +113,33 @@
 + (void)setHasOneMappingObjectOn:(NSMutableDictionary *)representation
                withObjectMapping:(EKObjectMapping *)mapping
                       fromObject:(id)object
+			 includingNullValues:(BOOL)nullFlag
 {
     id hasOneObject = [object valueForKey:mapping.field];
-    if (hasOneObject) {
+	if (hasOneObject) {
         NSDictionary *hasOneRepresentation = [self serializeObject:hasOneObject withMapping:mapping];
-        [representation setObject:hasOneRepresentation forKey:mapping.keyPath];
-    }
+		[representation setObject:hasOneRepresentation forKey:mapping.keyPath];
+	} else {
+		if (nullFlag) {
+			[representation setObject:[NSNull null] forKey:mapping.keyPath];
+		}
+	}
 }
 
 + (void)setHasManyMappingObjectOn:(NSMutableDictionary *)representation
                 withObjectMapping:(EKObjectMapping *)mapping
                        fromObject:(id)object
+			  includingNullValues:(BOOL)nullFlag
 {
     id hasManyObject = [object valueForKey:mapping.field];
     if (hasManyObject) {
-        NSArray *hasManyRepresentation = [self serializeCollection:hasManyObject withMapping:mapping];
-        [representation setObject:hasManyRepresentation forKey:mapping.keyPath];
-    }
+		NSArray *hasManyRepresentation = [self serializeCollection:hasManyObject withMapping:mapping];
+		[representation setObject:hasManyRepresentation forKey:mapping.keyPath];
+	} else {
+		if (nullFlag) {
+			[representation setObject:[NSNull null] forKey:mapping.keyPath];
+		}
+	}
 }
 
 
