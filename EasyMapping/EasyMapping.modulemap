@@ -1,0 +1,9 @@
+framework module EasyMapping {
+    umbrella header "EasyMapping.h"
+    
+    // Private headers
+    exclude header "EKCoreDataImporter.h"
+    exclude header "EKPropertyHelper.h"
+    exclude header "EKRelationshipMapping.h"
+    exclude header "NSArray+FlattenArray.h"
+}
