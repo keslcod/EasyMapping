@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "EasyMapping"
-  s.version      = "0.15.1"
+  s.version      = "0.15.2"
   s.summary      = "The easiest way to map data from your webservice."
   s.homepage     = "https://github.com/lucasmedeirosleite/EasyMapping"
 
@@ -18,11 +18,16 @@ Pod::Spec.new do |s|
   s.osx.deployment_target = '10.7'
 
   s.subspec 'Core' do |core|
+    core.watchos.deployment_target = '2.0'
+    core.ios.deployment_target = '5.0'
+    core.osx.deployment_target = '10.7'
     core.frameworks = 'CoreData'
     core.source_files = 'EasyMapping/*.{h,m}'
   end
 
   s.subspec 'XCTest' do |xctest|
+    xctest.ios.deployment_target = '5.0'
+    xctest.osx.deployment_target = '10.7'
     xctest.dependency 'EasyMapping/Core'
     xctest.frameworks = 'XCTest'
     xctest.source_files = 'XCTest+EasyMapping/*.{h,m}'
